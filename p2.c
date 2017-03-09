@@ -1,3 +1,4 @@
+/*
 #include<iostream>
 #include<vector>
 #include<string>
@@ -6,7 +7,7 @@
 
 using namespace std;
 
-
+*/
 struct trans {
 	int vertex_from;
 	int vertex_to;
