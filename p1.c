@@ -2,20 +2,30 @@
 #include<string.h>
 #define NO_OF_CHARS 256
  
+
+int main()
+{
+  char txt[256];
+  char pat[10];
+  
+  printf("Please enter the text :\n");
+  scanf("%s",txt);
+  
+  printf("Please enter the pattern for searching :\n");
+  scanf("%s",pat);
+ 
+  search(pat, txt);
+  return 0;
+}
+
+
 int getNextState(char *pat, int M, int state, int x)
 {
-  // If the character c is same as next character in pattern,
-  // then simply increment state
+
   if (state < M && x == pat[state])
   return state+1;
  
-  int ns, i; // ns stores the result which is next state
- 
-  // ns finally contains the longest prefix which is also suffix
-  // in "pat[0..state-1]c"
- 
-  // Start from the largest possible value and stop when you find
-  // a prefix which is also suffix
+  int ns, i; 
   for (ns = state; ns > 0; ns--)
   {
   if(pat[ns-1] == x)
@@ -32,9 +42,7 @@ int getNextState(char *pat, int M, int state, int x)
  
   return 0;
 }
- 
-/* This function builds the TF table which represents Finite Automata for a
-  given pattern */
+
 void computeTF(char *pat, int M, int TF[][NO_OF_CHARS])
 {
   int state, x;
@@ -43,7 +51,7 @@ void computeTF(char *pat, int M, int TF[][NO_OF_CHARS])
   TF[state][x] = getNextState(pat, M, state, x);
 }
  
-/* Prints all occurrences of pat in txt */
+
 void search(char *pat, char *txt)
 {
   int M = strlen(pat);
@@ -64,17 +72,5 @@ void search(char *pat, char *txt)
   }
   }
 }
- 
-// Driver program to test above function
-int main()
-{
-  char txt[256];
-  char pat[10];
-  printf("Please enter the text :\n");
-  scanf("%s",txt);
-  
-  printf("Please enter the pattern for searching :\n");
-  scanf("%s",pat);
-  search(pat, txt);
-  return 0;
-}
+
+
