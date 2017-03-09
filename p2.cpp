@@ -33,7 +33,7 @@ public:
 			vertex.push_back(i);
 		}
 	}
-
+/*
 	void set_transition(int vertex_from, int vertex_to, char trans_symbol) {
 		trans new_trans;
 		new_trans.vertex_from = vertex_from;
@@ -41,7 +41,7 @@ public:
 		new_trans.trans_symbol = trans_symbol;
 		transitions.push_back(new_trans);
 	}
-
+*/
 	void set_final_state(int fs) {
 		final_state = fs;
 	}
@@ -49,7 +49,7 @@ public:
 	int get_final_state() {
 		return final_state;
 	}
-
+/*
 	void display() {
 		trans new_trans;
 		cout<<"\n";
@@ -60,9 +60,9 @@ public:
 		cout<<"\nThe final state is q"<<get_final_state()<<endl;
 	}
 };
+*/
 
-
-
+/*
 NFA concat(NFA a, NFA b) {
 	NFA result;
 	result.set_vertex(a.get_vertex_count() + b.get_vertex_count());
