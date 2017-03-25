@@ -1,3 +1,4 @@
+/*
 #include<stdio.h>
 
 void main(){
@@ -91,4 +92,5 @@ switch(state){
 
 }
 
-} 
+}
+*/
