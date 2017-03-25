@@ -3,8 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char*
-re2post(char *re)
+char* re2post(char *re)
 {
 	int nalt, natom;
 	static char buf[8000];
@@ -100,8 +99,7 @@ State matchstate = { Match };	/* matching state */
 int nstate;
 
 /* Allocate and initialize State */
-State*
-state(int c, State *out, State *out1)
+State* state(int c, State *out, State *out1)
 {
 	State *s;
 	
@@ -126,8 +124,7 @@ struct Frag
 };
 
 /* Initialize Frag struct. */
-Frag
-frag(State *start, Ptrlist *out)
+Frag frag(State *start, Ptrlist *out)
 {
 	Frag n = { start, out };
 	return n;
@@ -156,8 +153,7 @@ list1(State **outp)
 }
 
 /* Patch the list of states at out to point to start. */
-void
-patch(Ptrlist *l, State *s)
+void patch(Ptrlist *l, State *s)
 {
 	Ptrlist *next;
 	
@@ -184,8 +180,7 @@ append(Ptrlist *l1, Ptrlist *l2)
  * Convert postfix regular expression to NFA.
  * Return start state.
  */
-State*
-post2nfa(char *postfix)
+State* post2nfa(char *postfix)
 {
 	char *p;
 	Frag stack[1000], *stackp, e1, e2, e;
@@ -261,8 +256,7 @@ void addstate(List*, State*);
 void step(List*, int, List*);
 
 /* Compute initial state list */
-List*
-startlist(State *start, List *l)
+List* startlist(State *start, List *l)
 {
 	l->n = 0;
 	listid++;
@@ -271,8 +265,7 @@ startlist(State *start, List *l)
 }
 
 /* Check whether state list contains a match. */
-int
-ismatch(List *l)
+int ismatch(List *l)
 {
 	int i;
 
@@ -283,8 +276,7 @@ ismatch(List *l)
 }
 
 /* Add s to l, following unlabeled arrows. */
-void
-addstate(List *l, State *s)
+void addstate(List *l, State *s)
 {
 	if(s == NULL || s->lastlist == listid)
 		return;
@@ -303,8 +295,7 @@ addstate(List *l, State *s)
  * past the character c,
  * to create next NFA state set nlist.
  */
-void
-step(List *clist, int c, List *nlist)
+void step(List *clist, int c, List *nlist)
 {
 	int i;
 	State *s;
@@ -319,8 +310,7 @@ step(List *clist, int c, List *nlist)
 }
 
 /* Run NFA to determine whether it matches s. */
-int
-match(State *start, char *s)
+int match(State *start, char *s)
 {
 	int i, c;
 	List *clist, *nlist, *t;
@@ -335,8 +325,7 @@ match(State *start, char *s)
 	return ismatch(clist);
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int i;
 	char *post;
