@@ -1,293 +1,368 @@
-/*
-#include<iostream>
-#include<vector>
-#include<string>
-#include<set>
-#include<stack>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-using namespace std;
-
-*/
-struct trans {
-	int vertex_from;
-	int vertex_to;
-	char trans_symbol;
-};
-
-
-class NFA {
-public:
-	vector<int> vertex;
-	vector<trans> transitions;
-	int final_state;
-
-	NFA() {
-
-	}
-
-	int get_vertex_count() {
-		return vertex.size();
-	}
-
-	void set_vertex(int no_vertex) {
-		for(int i = 0; i < no_vertex; i++) {
-			vertex.push_back(i);
-		}
-	}
-/*
-	void set_transition(int vertex_from, int vertex_to, char trans_symbol) {
-		trans new_trans;
-		new_trans.vertex_from = vertex_from;
-		new_trans.vertex_to = vertex_to;
-		new_trans.trans_symbol = trans_symbol;
-		transitions.push_back(new_trans);
-	}
-*/
-	void set_final_state(int fs) {
-		final_state = fs;
-	}
-
-	int get_final_state() {
-		return final_state;
-	}
-/*
-	void display() {
-		trans new_trans;
-		cout<<"\n";
-		for(int i = 0; i < transitions.size(); i++) {
-			new_trans = transitions.at(i);
-			cout<<"q"<<new_trans.vertex_from<<" --> q"<<new_trans.vertex_to<<" : Symbol - "<<new_trans.trans_symbol<<endl;
-		}
-		cout<<"\nThe final state is q"<<get_final_state()<<endl;
-	}
-};
-*/
-
-/*
-NFA concat(NFA a, NFA b) {
-	NFA result;
-	result.set_vertex(a.get_vertex_count() + b.get_vertex_count());
-	int i;
-	trans new_trans;
-
-	for(i = 0; i < a.transitions.size(); i++) {
-		new_trans = a.transitions.at(i);
-		result.set_transition(new_trans.vertex_from, new_trans.vertex_to, new_trans.trans_symbol);
-	}
-
-	result.set_transition(a.get_final_state(), a.get_vertex_count(), '^');
-
-	for(i = 0; i < b.transitions.size(); i++) {
-		new_trans = b.transitions.at(i);
-		result.set_transition(new_trans.vertex_from + a.get_vertex_count(), new_trans.vertex_to + a.get_vertex_count(), new_trans.trans_symbol);
-	}
-
-	result.set_final_state(a.get_vertex_count() + b.get_vertex_count() - 1);
-
-	return result;
-}
-
-
-NFA kleene(NFA a) {
-	NFA result;
-	int i;
-	trans new_trans;
+char*
+re2post(char *re)
+{
+	int nalt, natom;
+	static char buf[8000];
+	char *dst;
+	struct {
+		int nalt;
+		int natom;
+	} paren[100], *p;
 	
-	result.set_vertex(a.get_vertex_count() + 2);
-
-	result.set_transition(0, 1, '^');
-
-	for(i = 0; i < a.transitions.size(); i++) {
-		new_trans = a.transitions.at(i);
-		result.set_transition(new_trans.vertex_from + 1, new_trans.vertex_to + 1, new_trans.trans_symbol);
-	}
-
-	result.set_transition(a.get_vertex_count(), a.get_vertex_count() + 1, '^');
-	result.set_transition(a.get_vertex_count(), 1, '^');
-	result.set_transition(0, a.get_vertex_count() + 1, '^');
-
-	result.set_final_state(a.get_vertex_count() + 1);
-
-	return result;
-}
-
-
-NFA or_selection(vector<NFA> selections, int no_of_selections) {
-	NFA result;
-	int vertex_count = 2;
-	int i, j;
-	NFA med;
-	trans new_trans;
-
-	for(i = 0; i < no_of_selections; i++) {
-		vertex_count += selections.at(i).get_vertex_count();
-	}
-
-	result.set_vertex(vertex_count);
-	
-	int adder_track = 1;
-
-	for(i = 0; i < no_of_selections; i++) {
-		result.set_transition(0, adder_track, '^');
-		med = selections.at(i);
-		for(j = 0; j < med.transitions.size(); j++) {
-			new_trans = med.transitions.at(j);
-			result.set_transition(new_trans.vertex_from + adder_track, new_trans.vertex_to + adder_track, new_trans.trans_symbol);
-		}
-		adder_track += med.get_vertex_count();
-
-		result.set_transition(adder_track - 1, vertex_count - 1, '^');
-	}
-
-	result.set_final_state(vertex_count - 1);
-
-	return result;
-}
-
-
-NFA re_to_nfa(string re) {
-	stack<char> operators;
-	stack<NFA> operands;
-	char op_sym;
-	int op_count;
-	char cur_sym;
-	NFA *new_sym;
-	
-	for(string::iterator it = re.begin(); it != re.end(); ++it) {
-		cur_sym = *it;
-		if(cur_sym != '(' && cur_sym != ')' && cur_sym != '*' && cur_sym != '|' && cur_sym != '.') {
-			new_sym = new NFA();
-			new_sym->set_vertex(2);
-			new_sym->set_transition(0, 1, cur_sym);
-			new_sym->set_final_state(1);
-			operands.push(*new_sym);
-			delete new_sym;
-		} else {
-			if(cur_sym == '*') {
-				NFA star_sym = operands.top();
-				operands.pop();
-				operands.push(kleene(star_sym));
-			} else if(cur_sym == '.') {
-				operators.push(cur_sym);
-			} else if(cur_sym == '|') {
-				operators.push(cur_sym);
-			} else if(cur_sym == '(') {
-				operators.push(cur_sym);
-			} else {
-				op_count = 0;
-				char c;
-				op_sym = operators.top();
-				if(op_sym == '(') continue;
-				do {
-					operators.pop();
-					op_count++;
-				} while(operators.top() != '(');
-				operators.pop();
-				NFA op1;
-				NFA op2;
-				vector<NFA> selections;
-				if(op_sym == '.') {
-					for(int i = 0; i < op_count; i++) {
-						op2 = operands.top();
-						operands.pop();
-						op1 = operands.top();
-						operands.pop();
-						operands.push(concat(op1, op2));
-					}
-				} else if(op_sym == '|'){
-					selections.assign(op_count + 1, NFA());
-					int tracker = op_count;
-					for(int i = 0; i < op_count + 1; i++) {
-						selections.at(tracker) = operands.top();
-						tracker--;
-						operands.pop();
-					}
-					operands.push(or_selection(selections, op_count+1));
-				} else {
-					
-				}
+	p = paren;
+	dst = buf;
+	nalt = 0;
+	natom = 0;
+	if(strlen(re) >= sizeof buf/2)
+		return NULL;
+	for(; *re; re++){
+		switch(*re){
+		case '(':
+			if(natom > 1){
+				--natom;
+				*dst++ = '.';
 			}
+			if(p >= paren+100)
+				return NULL;
+			p->nalt = nalt;
+			p->natom = natom;
+			p++;
+			nalt = 0;
+			natom = 0;
+			break;
+		case '|':
+			if(natom == 0)
+				return NULL;
+			while(--natom > 0)
+				*dst++ = '.';
+			nalt++;
+			break;
+		case ')':
+			if(p == paren)
+				return NULL;
+			if(natom == 0)
+				return NULL;
+			while(--natom > 0)
+				*dst++ = '.';
+			for(; nalt > 0; nalt--)
+				*dst++ = '|';
+			--p;
+			nalt = p->nalt;
+			natom = p->natom;
+			natom++;
+			break;
+		case '*':
+		case '+':
+		case '?':
+			if(natom == 0)
+				return NULL;
+			*dst++ = *re;
+			break;
+		default:
+			if(natom > 1){
+				--natom;
+				*dst++ = '.';
+			}
+			*dst++ = *re;
+			natom++;
+			break;
 		}
 	}
-
-	return operands.top();
+	if(p != paren)
+		return NULL;
+	while(--natom > 0)
+		*dst++ = '.';
+	for(; nalt > 0; nalt--)
+		*dst++ = '|';
+	*dst = 0;
+	return buf;
 }
 
+enum
+{
+	Match = 256,
+	Split = 257
+};
+typedef struct State State;
+struct State
+{
+	int c;
+	State *out;
+	State *out1;
+	int lastlist;
+};
+State matchstate = { Match };	/* matching state */
+int nstate;
 
-int main() {
-	cout<<"\n\nThe Thompson's Construction Algorithm takes a regular expression as an input "
-		<<"and returns its corresponding Non-Deterministic Finite Automaton \n\n";
-	cout<<"\n\nThe basic building blocks for constructing the NFA are : \n";
-
-	NFA a, b;
-
-	cout<<"\nFor the regular expression segment : (a)";
-	a.set_vertex(2);
-	a.set_transition(0, 1, 'a');
-	a.set_final_state(1);
-	a.display();
-//	getch();
-
-	cout<<"\nFor the regular expression segment : (b)";
-	b.set_vertex(2);
-	b.set_transition(0, 1, 'b');
-	b.set_final_state(1);
-	b.display();
-//	getch();
-
-	cout<<"\nFor the regular expression segment [Concatenation] : (a.b)";
-	NFA ab = concat(a, b);
-	ab.display();
-//	getch();
-
-	cout<<"\nFor the regular expression segment [Kleene Closure] : (a*)";
-	NFA a_star = kleene(a);
-	a_star.display();
-//	getch();
-
-	cout<<"\nFor the regular expression segment [Or] : (a|b)";
-	int no_of_selections;
-	no_of_selections = 2;
-	vector<NFA> selections(no_of_selections, NFA());
-	selections.at(0) = a;
-	selections.at(1) = b;
-	NFA a_or_b = or_selection(selections, no_of_selections);
-	a_or_b.display();	
-//	getch();
-
-
-	string re;
-	set<char> symbols;
-
-	cout<<"\n*****\t*****\t*****\n";
-	cout<<"\nFORMAT : \n"
-		<<"> Explicitly mention concatenation with a '.' operator \n"
-		<<"> Enclose every concatenation and or section by parantheses \n"
-		<<"> Enclose the entire regular expression with parantheses \n\n";
-
-	cout<<"For example : \nFor the regular expression (a.(b|c))  -- \n";
-	NFA example_nfa = re_to_nfa("(a.(b|c))");
-	example_nfa.display();
+/* Allocate and initialize State */
+State*
+state(int c, State *out, State *out1)
+{
+	State *s;
 	
-	cout<<"\n\nEnter the regular expression in the above mentioned format - \n\n";
-	cin>>re;
+	nstate++;
+	s = malloc(sizeof *s);
+	s->lastlist = 0;
+	s->c = c;
+	s->out = out;
+	s->out1 = out1;
+	return s;
+}
 
-/*	char cur_sym;
-	int counter = 0;
-	for(string::iterator it = re.begin(); it != re.end(); ++it) {
-		cur_sym = (*it);
-		if(cur_sym != '(' && cur_sym != ')' && cur_sym != '*' && cur_sym != '|' && cur_sym != '.') {
-			cout<<cur_sym<<" "<<counter++<<endl;
-			symbols.insert(cur_sym);
+/*
+ * A partially built NFA without the matching state filled in.
+ */
+typedef struct Frag Frag;
+typedef union Ptrlist Ptrlist;
+struct Frag
+{
+	State *start;
+	Ptrlist *out;
+};
+
+/* Initialize Frag struct. */
+Frag
+frag(State *start, Ptrlist *out)
+{
+	Frag n = { start, out };
+	return n;
+}
+
+/*
+ * Since the out pointers in the list are always 
+ * uninitialized, we use the pointers themselves
+ * as storage for the Ptrlists.
+ */
+union Ptrlist
+{
+	Ptrlist *next;
+	State *s;
+};
+
+/* Create singleton list containing just outp. */
+Ptrlist*
+list1(State **outp)
+{
+	Ptrlist *l;
+	
+	l = (Ptrlist*)outp;
+	l->next = NULL;
+	return l;
+}
+
+/* Patch the list of states at out to point to start. */
+void
+patch(Ptrlist *l, State *s)
+{
+	Ptrlist *next;
+	
+	for(; l; l=next){
+		next = l->next;
+		l->s = s;
+	}
+}
+
+/* Join the two lists l1 and l2, returning the combination. */
+Ptrlist*
+append(Ptrlist *l1, Ptrlist *l2)
+{
+	Ptrlist *oldl1;
+	
+	oldl1 = l1;
+	while(l1->next)
+		l1 = l1->next;
+	l1->next = l2;
+	return oldl1;
+}
+
+/*
+ * Convert postfix regular expression to NFA.
+ * Return start state.
+ */
+State*
+post2nfa(char *postfix)
+{
+	char *p;
+	Frag stack[1000], *stackp, e1, e2, e;
+	State *s;
+	
+	// fprintf(stderr, "postfix: %s\n", postfix);
+
+	if(postfix == NULL)
+		return NULL;
+
+	#define push(s) *stackp++ = s
+	#define pop() *--stackp
+
+	stackp = stack;
+	for(p=postfix; *p; p++){
+		switch(*p){
+		default:
+			s = state(*p, NULL, NULL);
+			push(frag(s, list1(&s->out)));
+			break;
+		case '.':	/* catenate */
+			e2 = pop();
+			e1 = pop();
+			patch(e1.out, e2.start);
+			push(frag(e1.start, e2.out));
+			break;
+		case '|':	/* alternate */
+			e2 = pop();
+			e1 = pop();
+			s = state(Split, e1.start, e2.start);
+			push(frag(s, append(e1.out, e2.out)));
+			break;
+		case '?':	/* zero or one */
+			e = pop();
+			s = state(Split, e.start, NULL);
+			push(frag(s, append(e.out, list1(&s->out1))));
+			break;
+		case '*':	/* zero or more */
+			e = pop();
+			s = state(Split, e.start, NULL);
+			patch(e.out, s);
+			push(frag(s, list1(&s->out1)));
+			break;
+		case '+':	/* one or more */
+			e = pop();
+			s = state(Split, e.start, NULL);
+			patch(e.out, s);
+			push(frag(e.start, list1(&s->out1)));
+			break;
 		}
 	}
-*/
 
-	cout<<"\n\nThe required NFA has the transitions : \n\n";
+	e = pop();
+	if(stackp != stack)
+		return NULL;
+
+	patch(e.out, &matchstate);
+	return e.start;
+#undef pop
+#undef push
+}
+
+typedef struct List List;
+struct List
+{
+	State **s;
+	int n;
+};
+List l1, l2;
+static int listid;
+
+void addstate(List*, State*);
+void step(List*, int, List*);
+
+/* Compute initial state list */
+List*
+startlist(State *start, List *l)
+{
+	l->n = 0;
+	listid++;
+	addstate(l, start);
+	return l;
+}
+
+/* Check whether state list contains a match. */
+int
+ismatch(List *l)
+{
+	int i;
+
+	for(i=0; i<l->n; i++)
+		if(l->s[i] == &matchstate)
+			return 1;
+	return 0;
+}
+
+/* Add s to l, following unlabeled arrows. */
+void
+addstate(List *l, State *s)
+{
+	if(s == NULL || s->lastlist == listid)
+		return;
+	s->lastlist = listid;
+	if(s->c == Split){
+		/* follow unlabeled arrows */
+		addstate(l, s->out);
+		addstate(l, s->out1);
+		return;
+	}
+	l->s[l->n++] = s;
+}
+
+/*
+ * Step the NFA from the states in clist
+ * past the character c,
+ * to create next NFA state set nlist.
+ */
+void
+step(List *clist, int c, List *nlist)
+{
+	int i;
+	State *s;
+
+	listid++;
+	nlist->n = 0;
+	for(i=0; i<clist->n; i++){
+		s = clist->s[i];
+		if(s->c == c)
+			addstate(nlist, s->out);
+	}
+}
+
+/* Run NFA to determine whether it matches s. */
+int
+match(State *start, char *s)
+{
+	int i, c;
+	List *clist, *nlist, *t;
+
+	clist = startlist(start, &l1);
+	nlist = &l2;
+	for(; *s; s++){
+		c = *s & 0xFF;
+		step(clist, c, nlist);
+		t = clist; clist = nlist; nlist = t;	/* swap clist, nlist */
+	}
+	return ismatch(clist);
+}
+
+int
+main(int argc, char **argv)
+{
+	int i;
+	char *post;
+	State *start;
+
+	if(argc < 3){
+		fprintf(stderr, "usage: nfa regexp string...\n");
+		return 1;
+	}
 	
-	NFA required_nfa;
-	required_nfa = re_to_nfa(re);
-	required_nfa.display();	
+	post = re2post(argv[1]);
+	if(post == NULL){
+		fprintf(stderr, "bad regexp %s\n", argv[1]);
+		return 1;
+	}
 
-return 0;
+	start = post2nfa(post);
+	if(start == NULL){
+		fprintf(stderr, "error in post2nfa %s\n", post);
+		return 1;
+	}
+	
+	l1.s = malloc(nstate*sizeof l1.s[0]);
+	l2.s = malloc(nstate*sizeof l2.s[0]);
+	for(i=2; i<argc; i++)
+		if(match(start, argv[i]))
+			printf("%s\n", argv[i]);
+	return 0;
 }
